@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "form",
+  "description": "A curated group of CDEs used to collect data (NIH CDE Repository Guide: 'a curated group of multiple CDEs… may represent a known instrument, assessment, survey, questionnaire, or case report form (CRF)'). This is the data-collection instrument — NLM's non-bundle Form and NINDS's CRF both land here. A form ASSEMBLES elements: its members are CDEs (and, when a source records it, bundles), in question order; it does NOT re-vet recommendation tiers — the tier is a property of the vetted unit (a bundle, or a CDE's disease classification), not of the form. Membership is a direct member -> form PART_OF relationship. The form's own taxonomy placement (which disease/domain it is filed under) lives in `form_classification` (one row per form x steward x context), mirroring `cde_classification`. NOTE: an NLM Form flagged isBundle=true is NOT a form — it is an indivisible `bundle` (see the bundle model).",
+  "type": "object",
+  "required": ["form_key", "steward_org"],
+  "properties": {
+    "form_key": {
+      "description": "The form's identity. For NLM forms this is 'nlm:<tinyId>' (globally unique); for a direct-steward source (e.g. NINDS) it is the steward's own form id (CRF id, e.g. 'F1123'). The human title lives in `form_name`.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "form_name": {
+      "description": "Human-readable form title (the form's primary designation, e.g. 'Adverse Event Tracking Log').",
+      "type": ["string", "null"]
+    },
+    "instructions": {
+      "description": "Instructions for completing the form, when the source provides them.",
+      "type": ["string", "null"]
+    },
+    "definition": {
+      "description": "The form's definition/description.",
+      "type": ["string", "null"]
+    },
+    "steward_org": {
+      "description": "The steward org that owns the form (the authoritative owner, e.g. NINDS). Same concept as cde.steward_org; distinct from a classification edge's steward_org (the classifying authority in form_classification).",
+      "type": ["string"]
+    },
+    "steward_code": {
+      "description": "The steward's OWN form identifier (e.g. NINDS CRF 'F1123'), when the source records it. Cross-source form identity: NLM re-hosts a steward's form under form_key 'nlm:<tinyId>' but carries the steward code here, and a direct-steward source (e.g. ninds-sync) keys the same form by this code — so integrate merges them on COALESCE(steward_code, form_key), letting the higher-priority source supersede the other instead of both surviving as duplicate forms. Null when the form has no steward-assigned code.",
+      "type": ["string", "null"]
+    },
+    "member_cde_keys": {
+      "description": "Member cde_keys in question order. An ordering hint for display; membership itself is the cde -> form PART_OF edges.",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "nlm_identifier": {
+      "description": "Upstream form identifier (NLM form tinyId).",
+      "type": ["string", "null"]
+    },
+    "nlm_view_url": {
+      "description": "Canonical NLM CDE Repository form view page.",
+      "type": ["string", "null"]
+    },
+    "registration_status": {
+      "description": "NLM/ISO-11179 administered-item lifecycle state of the form.",
+      "type": ["string", "null"],
+      "enum": ["Draft", "Candidate", "Recorded", "Qualified", "Standard", "Preferred Standard", "Retired", "Superseded", null]
+    },
+    "nih_endorsed": {
+      "description": "NIH-Endorsed governance flag (NLM `nihEndorsed`). Same flag as cde.nih_endorsed / bundle.nih_endorsed.",
+      "type": ["boolean", "null"]
+    },
+    "copyright_status": {
+      "description": "Upstream copyright / redistribution status (NLM `copyrightStatus`, e.g. 'Public domain, free to use'). Same concept as cde.copyright_status.",
+      "type": ["string", "null"]
+    },
+    "num_questions": {
+      "description": "Number of questions (CDEs) on the form — distinguishes tight instruments from large CRFs.",
+      "type": ["integer", "null"]
+    },
+    "source_version": {
+      "description": "The upstream source's own version string, captured verbatim (e.g. NLM/caDSR '3.1'). Same concept as cde.source_version.",
+      "type": ["string", "null"]
+    }
+  }
+}

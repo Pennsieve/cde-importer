@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cde",
+  "description": "A Common Data Element: a standardized, reusable data-element definition (NLM/ISO-11179 aligned). One record per CDE. Attach to a model property via x-pennsieve-cde. List-shaped fields are native arrays here; the catalog publisher flattens them to the dashboard's pipe-joined columns on export.",
+  "type": "object",
+  "required": [
+    "cde_key",
+    "cde_name",
+    "cde_definition",
+    "cde_data_type",
+    "cde_source",
+    "version",
+    "registration_status"
+  ],
+  "properties": {
+    "cde_key": {
+      "description": "The CDE's identity: an importer-computed canonical dedup key (nlm_identifier -> dec_identifier -> 'name:' + normalized cde_name). Key property => deterministic record ID + idempotent re-import. Referenced by cde_classification.cde_key, cde_bundle_tier.cde_key, and bundle.member_cde_keys.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "persistent_id": {
+      "description": "Stable, resolvable public identifier (PURL/tinyId) for FAIR citation. Assigned on first publish; stable across re-publishes.",
+      "type": ["string", "null"]
+    },
+    "version": {
+      "description": "The CDE's catalog-side version (caDSR (publicId, version) practice) — a monotonic integer bumped on curation, and what x-pennsieve-cde bindings pin. NOT the catalog release version, and NOT the upstream source version (see source_version).",
+      "type": ["integer"],
+      "minimum": 1
+    },
+    "source_version": {
+      "description": "The upstream source's own version string, captured verbatim for provenance (e.g. NLM/caDSR '3.1'). Distinct from `version` (our integer that bindings pin); lets a re-sync detect when the upstream element actually changed.",
+      "type": ["string", "null"]
+    },
+    "copyright_status": {
+      "description": "Upstream copyright / redistribution status (NLM `copyrightStatus`, e.g. 'Public domain, free to use'). Gates whether this element's permissible values are license-restricted (SNOMED/LOINC-derived values are withheld upstream and must not be published); a curation/licensing signal (FAIR R1.1).",
+      "type": ["string", "null"]
+    },
+    "registration_status": {
+      "description": "NLM/ISO-11179 administered-item lifecycle. Retired CDEs remain published; Drafts are published (labeled).",
+      "type": ["string"],
+      "enum": ["Draft", "Candidate", "Recorded", "Qualified", "Standard", "Preferred Standard", "Retired", "Superseded"]
+    },
+    "nih_endorsed": {
+      "description": "NIH-Endorsed governance flag (NLM `nihEndorsed`): the NIH CDE Governance Committee has endorsed this element. Same flag as form.nih_endorsed / bundle.nih_endorsed.",
+      "type": ["boolean", "null"]
+    },
+    "managed_by": {
+      "description": "Integration-merge ownership of this canonical record: a source_key (import-owned — the integration import may overwrite it from that source per ranked priority) or 'curator' (hand-edited — the integration import must NEVER overwrite it: the no-clobber rule). Unset/null is treated as import-owned. Only meaningful in the canonical catalog dataset; source datasets leave it unset.",
+      "type": ["string", "null"]
+    },
+    "cde_name": {
+      "description": "Human-readable CDE name — a unique, unambiguous label distinguishing this CDE from others (e.g. 'Head circumference measurement').",
+      "type": ["string"]
+    },
+    "variable_name": {
+      "description": "The machine/form variable name a data collector should use for this CDE in a form or dataset (NINDS `suggestedName`, e.g. 'DataCollDateTime'; the NIH template's project variable name). Short, CamelCase/token-style, source-provided — distinct from the human-readable `cde_name`. NULL for sources that don't supply one.",
+      "type": ["string", "null"]
+    },
+    "cde_type": {
+      "description": "The NIH CDE 'CDE Type' (NIH CDE Repository Guide): NULL/absent for an ordinary individual CDE; 'Composite' when the CDE is calculated/combined/concatenated from other CDEs (e.g. BMI, blood pressure — see `calculation_formula` / `concatenation_rule`); 'Bundled Set of Questions' when the CDE is a member of an indivisible bundle (a validated instrument like PHQ/AUDIT). Bundle membership itself is the cde -> bundle PART_OF edge; this only records the CDE's role.",
+      "type": ["string", "null"],
+      "enum": ["Composite", "Bundled Set of Questions", null]
+    },
+    "concatenation_rule": {
+      "description": "For a Composite CDE whose value is concatenated from other CDEs (NIH 'Rules to Concatenate'): the rule combining the parts (e.g. '[First_name] [Middle_Initial] [Last_name]'). NULL otherwise.",
+      "type": ["string", "null"]
+    },
+    "calculation_formula": {
+      "description": "For a Composite CDE whose value is calculated from other CDEs (NIH 'Formula to Calculate'; NLM `derivationRules`): the formula (e.g. 'BMI = (weight_lbs / height_in^2) * 703'). NULL otherwise.",
+      "type": ["string", "null"]
+    },
+    "additional_instructions": {
+      "description": "Additional instructions for using this CDE (NIH 'Additional Instructions for CDE Use'). NULL when none.",
+      "type": ["string", "null"]
+    },
+    "input_restrictions": {
+      "description": "Data-collection input restriction: the input type (check box / radio button / free text) and/or a content rule (regular expression, length/format). Free string. NULL when none.",
+      "type": ["string", "null"]
+    },
+    "cde_definition": {
+      "description": "A subject-matter-expert textual definition describing the CDE in detail (e.g. 'Date of interview or visit').",
+      "type": ["string"]
+    },
+    "cde_data_type": {
+      "description": "The type of data collected for this CDE (NIH CDE Repository data-type list).",
+      "type": ["string"],
+      "enum": ["Number", "Text", "Value List", "Date", "Datetime", "Time", "File/URI/URL", "Geolocation", "Other"]
+    },
+    "preferred_question_text": {
+      "description": "The preferred text to use on a case report form, questionnaire, or measure to standardize how the data are collected.",
+      "type": ["string", "null"]
+    },
+    "aliases": {
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "keywords": {
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "cde_source": {
+      "description": "Display label of the originating catalog, e.g. NLM CDE Repository (matches provenance.provenance_name of the record it is SOURCED_FROM). Not the steward: see steward_org.",
+      "type": ["string"]
+    },
+    "steward_org": {
+      "description": "Upstream registration authority / steward (caDSR, NINDS, NHLBI). Distinct from the Pennsieve importer identity, which is carried by record provenance_id/SOURCED_FROM.",
+      "type": ["string", "null"]
+    },
+    "permissible_values": {
+      "description": "Enumerated value domain (for cde_data_type = 'Value List'). Native array of objects; publisher flattens to pv_codes|pv_labels|pv_definitions|pv_code_systems|pv_concept_identifiers|pv_terminology_sources (positional).",
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["label"],
+        "properties": {
+          "code": { "type": ["string", "null"] },
+          "label": { "type": "string" },
+          "definition": { "type": ["string", "null"] },
+          "code_system": { "type": ["string", "null"] },
+          "code_system_version": { "type": ["string", "null"] },
+          "concept_curie": { "type": ["string", "null"] },
+          "concept_iri": { "type": ["string", "null"] },
+          "terminology_source": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "unit_of_measure": {
+      "description": "UCUM code preferred (e.g. 'a', 'mg/dL').",
+      "type": ["string", "null"]
+    },
+    "unit_iri": {
+      "description": "Resolved UCUM/QUDT IRI snapshot for the unit.",
+      "type": ["string", "null"]
+    },
+    "min_value": { "type": ["number", "null"] },
+    "max_value": { "type": ["number", "null"] },
+    "measurement_method": {
+      "description": "LOINC-style axis: how measured (distinguishes 'glucose by method A' vs 'by method B').",
+      "type": ["string", "null"]
+    },
+    "measurement_system": {
+      "description": "LOINC-style axis: system/specimen (e.g. blood, serum).",
+      "type": ["string", "null"]
+    },
+    "measurement_scale": {
+      "description": "LOINC-style axis: scale type.",
+      "type": ["string", "null"],
+      "enum": ["Qn", "Ord", "Nom", "Nar", "Multi", null]
+    },
+    "measurement_time_aspect": { "type": ["string", "null"] },
+    "cde_origin": {
+      "description": "How the value originates (source-specific vocab, e.g. COLLECTED / CALCULATION / STANDALONE). Free string — not hard-enumerated, since sources vary.",
+      "type": ["string", "null"]
+    },
+    "population": {
+      "description": "Age group / population this CDE applies to (e.g. 'Adult', 'Pediatric', 'All'). An applicability facet — NINDS often issues population-specific CDEs rather than varying a tier by population.",
+      "type": ["string", "null"]
+    },
+    "references": {
+      "description": "Published evidence on the validity/reliability of this CDE in target populations (DOIs / PubMed IDs / stable identifiers). Same shape as bundle.references (required for bundles, optional for CDEs).",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "nlm_identifier": {
+      "description": "Upstream stable id (NLM tinyId / NINDS catalog id) — a cde_key input.",
+      "type": ["string", "null"]
+    },
+    "dec_identifier": {
+      "description": "caDSR Data Element Concept id(s) — a cde_key input. The normalized concept link is also expressed as a REPRESENTS relationship to a concept record.",
+      "type": ["string", "null"]
+    },
+    "dec_terminology_source": { "type": ["string", "null"] },
+    "dec_name": { "type": ["string", "null"] },
+    "other_identifiers": {
+      "description": "Cross-walks to other registries. Native array; publisher flattens to pipe-joined 'LABEL:VALUE'.",
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["label", "value"],
+        "properties": {
+          "label": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    "nlm_view_url": {
+      "description": "Canonical NLM CDE Repository view page for this CDE (keyed by tinyId).",
+      "type": ["string", "null"]
+    },
+    "xrefs": {
+      "description": "Cross-reference crosswalk to source registries (NLM tinyId, NINDS code, caDSR DEC id, ...), derived from the id fields at import. This published crosswalk lets consumers pivot from the minted persistent_id to a source id (keeping the internal id non-lock-in). 'match' is 'carried' (ingested with the record) or 'exact' (a curator-asserted equivalence).",
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["system", "id"],
+        "properties": {
+          "system": { "type": "string" },
+          "id": { "type": "string" },
+          "url": { "type": "string" },
+          "match": { "type": "string", "enum": ["carried", "exact"] }
+        }
+      }
+    }
+  }
+}

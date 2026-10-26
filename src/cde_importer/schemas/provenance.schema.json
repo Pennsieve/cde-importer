@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "provenance",
+  "description": "One record per imported source, describing the catalog it came from. Tags CDEs/classifications/bundles via SOURCED_FROM relationships and drives per-source_key grouping in the published parquet. Carries license + attribution (FAIR R1.1).",
+  "type": "object",
+  "required": ["source_key", "provenance_name"],
+  "properties": {
+    "source_key": {
+      "description": "URL-safe key; names the per-source output group in the published catalog.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "provenance_name": {
+      "description": "Human-readable source label (the originating catalog's display name; matches cde.cde_source).",
+      "type": ["string"]
+    },
+    "status": {
+      "description": "Curation maturity of this source's content (distinct from a CDE's own registration_status). `draft` = preliminary/sample, not for a public release; `released` = curated + license-cleared, publishable; `deprecated` = superseded. Gates public publishing (a later publish step includes only `released` sources).",
+      "type": ["string", "null"],
+      "enum": ["draft", "released", "deprecated", null]
+    },
+    "study_type": {
+      "type": ["string", "null"],
+      "enum": ["Clinical", "Preclinical", null]
+    },
+    "source_org": {
+      "description": "Upstream steward org this source was fetched from (e.g. NINDS, PhenX), when applicable.",
+      "type": ["string", "null"]
+    },
+    "source_url": { "type": ["string", "null"] },
+    "license": {
+      "description": "Redistribution license for this source's content (FAIR R1.1). Required before a source enters the public catalog. SNOMED-derived content is license-restricted; LOINC requires attribution.",
+      "type": ["string", "null"]
+    },
+    "attribution": {
+      "description": "Required attribution/citation text surfaced in the published manifest.",
+      "type": ["string", "null"]
+    },
+    "retrieved_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "workgroup": { "type": ["string", "null"] },
+    "etl_version": { "type": ["string", "null"] }
+  }
+}

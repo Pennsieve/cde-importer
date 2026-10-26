@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cde-importer"
+version = "0.1.0"
+description = "Shared transform, model and metadata-service client logic for the Pennsieve CDE catalog sync applications."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.urls]
+Repository = "https://github.com/Pennsieve/cde-importer"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cde_importer = ["schemas/*.schema.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

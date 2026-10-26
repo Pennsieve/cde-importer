@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bundle",
+  "description": "A Bundled Set of Questions (NIH CDE Repository Guide): 'a group of CDEs that lose meaning/validity if extracted and used individually. Most validated, standardized instruments are bundles' (e.g. PHQ-9, AUDIT; or a value + its unit). A bundle is INDIVISIBLE — its member CDEs are used as a set. Sourced from NLM Forms flagged isBundle=true (and from CDEs' partOfBundles). Distinct from a `form`, which is an assembly instrument that may reuse bundles. Membership is a direct cde -> bundle PART_OF relationship, in question order. The bundle's taxonomy placement AND its vetted recommendation `tier` live in `bundle_classification` (one row per bundle x steward x context) — the tier is set once, on the bundle, and forms that reuse the bundle do not re-vet it.",
+  "type": "object",
+  "required": ["bundle_key", "steward_org"],
+  "properties": {
+    "bundle_key": {
+      "description": "The bundle's identity. For NLM bundles this is 'nlm:<tinyId>' (globally unique). The human title lives in `bundle_name`.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "bundle_name": {
+      "description": "Human-readable bundle title — the instrument name for a standardized instrument (e.g. 'PHQ-9'), else a descriptive name (NIH Guide: 'If the bundle is a standardized instrument, use the instrument name').",
+      "type": ["string", "null"]
+    },
+    "definition": {
+      "description": "The bundle's definition/description.",
+      "type": ["string", "null"]
+    },
+    "steward_org": {
+      "description": "The steward org that owns the bundle (the authoritative owner, e.g. NINDS). Same concept as cde.steward_org; distinct from a classification edge's steward_org (the classifying authority in bundle_classification).",
+      "type": ["string"]
+    },
+    "steward_code": {
+      "description": "The steward's OWN identifier for the bundle, when recorded (cross-source merge key, mirroring form.steward_code). Null when absent.",
+      "type": ["string", "null"]
+    },
+    "member_cde_keys": {
+      "description": "Member cde_keys in question order (NLM 'Order of Question'). An ordering hint for display; membership itself is the cde -> bundle PART_OF edges.",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "references": {
+      "description": "Published evidence on the validity/reliability of the bundle in target populations (DOIs / PubMed IDs / stable identifiers). Required for bundles per the NIH Guide; captured when the source provides it.",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "nlm_identifier": {
+      "description": "Upstream bundle identifier (NLM form tinyId of the isBundle form).",
+      "type": ["string", "null"]
+    },
+    "nlm_view_url": {
+      "description": "Canonical NLM CDE Repository form view page for the bundle.",
+      "type": ["string", "null"]
+    },
+    "registration_status": {
+      "description": "NLM/ISO-11179 administered-item lifecycle state of the bundle.",
+      "type": ["string", "null"],
+      "enum": ["Draft", "Candidate", "Recorded", "Qualified", "Standard", "Preferred Standard", "Retired", "Superseded", null]
+    },
+    "nih_endorsed": {
+      "description": "NIH-Endorsed governance flag (NLM `nihEndorsed`). Same flag as cde.nih_endorsed / form.nih_endorsed.",
+      "type": ["boolean", "null"]
+    },
+    "copyright_status": {
+      "description": "Upstream copyright / redistribution status (NLM `copyrightStatus`, e.g. 'Public domain, free to use'). Same concept as cde.copyright_status.",
+      "type": ["string", "null"]
+    },
+    "num_questions": {
+      "description": "Number of questions (CDEs) in the bundle.",
+      "type": ["integer", "null"]
+    },
+    "source_version": {
+      "description": "The upstream source's own version string, captured verbatim (e.g. NLM/caDSR '3.1'). Same concept as cde.source_version.",
+      "type": ["string", "null"]
+    }
+  }
+}

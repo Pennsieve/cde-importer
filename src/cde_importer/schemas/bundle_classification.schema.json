@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "bundle_classification",
+  "description": "A bundle's VETTED recommendation in a situation — one row per (bundle_key x steward_org x context x sub_context x population). Same flat shape and wildcard rule as cde_classification (a '*' scoping column means 'applies to all values of that axis'; most-specific match wins on a form). This is where a bundle's tier lives (NLM places the tier on the isBundle form's own classification, e.g. 'Tier 1'). The tier is set once, on the bundle, and forms that reuse the bundle do not re-vet it.",
+  "type": "object",
+  "required": ["bundle_key", "steward_org", "context", "sub_context", "population"],
+  "properties": {
+    "bundle_key": {
+      "description": "The classified bundle's key (matches bundle.bundle_key; also the CLASSIFIES relationship target). Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "steward_org": {
+      "description": "The classifying authority. Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "context": {
+      "description": "Top scope: disease / study / collection. Part of the identity. '*' = all.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "sub_context": {
+      "description": "Second scope: scenario / severity / phase. Part of the identity. '*' = applies to the whole context.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "population": {
+      "description": "Applicability scope: population (e.g. 'Adult','Pediatric'). Part of the identity. '*' = all populations.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "domain": {
+      "description": "Descriptive top-level Domain (display column, not identity). Null when absent.",
+      "type": ["string", "null"]
+    },
+    "tier": {
+      "description": "The bundle's vetted recommendation level at this scope (e.g. 'Tier 1', 'Core'). Free string, not a hard enum. Null when the steward has no tier concept.",
+      "type": ["string", "null"]
+    }
+  }
+}

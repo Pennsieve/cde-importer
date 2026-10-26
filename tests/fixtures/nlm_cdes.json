@@ -1,0 +1,475 @@
+[
+ {
+  "tinyId": "XkzUPcohjx",
+  "primaryNameCopy": "# Ds miss school nRate PhenX",
+  "designations": [
+   {
+    "sources": [],
+    "tags": [
+     "Short Name"
+    ],
+    "designation": "# Ds miss school nRate PhenX"
+   },
+   {
+    "sources": [],
+    "tags": [
+     "Question Text"
+    ],
+    "designation": "Because of your headaches on how many days in the last 3 months . . .did you miss work or school"
+   },
+   {
+    "sources": [],
+    "tags": [
+     "Long Common Name"
+    ],
+    "designation": "Because of your headaches on how many days in the last 3 months did you miss work or school [PhenX]"
+   }
+  ],
+  "ids": [
+   {
+    "source": "(LOINC)",
+    "id": "Login to see value.",
+    "version": "2.69"
+   }
+  ],
+  "valueDomain": {
+   "identifiers": [],
+   "ids": [],
+   "datatype": "Number",
+   "permissibleValues": []
+  },
+  "classification": [
+   {
+    "stewardOrg": {
+     "name": "PhenX"
+    },
+    "elements": [
+     {
+      "elements": [],
+      "name": "Miscellaneous"
+     }
+    ]
+   }
+  ],
+  "stewardOrg": {
+   "name": "LOINC"
+  },
+  "registrationState": {
+   "registrationStatus": "Qualified",
+   "administrativeStatus": "Published",
+   "registrationStatusSortOrder": 2
+  },
+  "version": "1.1",
+  "copyrightStatus": "Public domain, free to use",
+  "nihEndorsed": false
+ },
+ {
+  "tinyId": "mZ7q9m2SPpZ",
+  "primaryNameCopy": "Adverse event CTCAE low level term name",
+  "designations": [
+   {
+    "sources": [],
+    "tags": [],
+    "designation": "Adverse event CTCAE low level term name"
+   },
+   {
+    "sources": [],
+    "tags": [],
+    "designation": "Adverse Event CTCAE Low Level Term Name"
+   },
+   {
+    "sources": [],
+    "tags": [
+     "Suggested Question Text"
+    ],
+    "designation": "CTCAE Term"
+   }
+  ],
+  "definitions": [
+   {
+    "sources": [],
+    "tags": [],
+    "definition": "Text that represents the Common Terminology Criteria for Adverse Events (CTCAE) low level term name for an adverse event."
+   }
+  ],
+  "ids": [
+   {
+    "source": "ISTH",
+    "id": "1:38:20:428"
+   },
+   {
+    "source": "NINDS caDSR",
+    "id": "3125302"
+   },
+   {
+    "source": "BRICS Variable Name",
+    "id": "AdvrsEvntCTCAELowLvlTermName"
+   },
+   {
+    "source": "NINDS",
+    "id": "C02310",
+    "version": "3"
+   }
+  ],
+  "valueDomain": {
+   "identifiers": [],
+   "ids": [],
+   "datatype": "Text",
+   "datatypeText": {
+    "maxLength": 255
+   },
+   "permissibleValues": []
+  },
+  "classification": [
+   {
+    "stewardOrg": {
+     "name": "NHLBI"
+    },
+    "elements": [
+     {
+      "elements": [
+       {
+        "name": "Domain",
+        "elements": [
+         {
+          "name": "Safety Data",
+          "elements": [
+           {
+            "name": "Adverse Events",
+            "elements": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "Classification",
+        "elements": [
+         {
+          "name": "Proposed",
+          "elements": []
+         }
+        ]
+       }
+      ],
+      "name": "Sickle Cell Disease"
+     },
+     {
+      "elements": [
+       {
+        "name": "Adverse Events",
+        "elements": [
+         {
+          "name": "General",
+          "elements": [
+           {
+            "name": "Identifiers",
+            "elements": []
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "name": "Venous Thromboembolism (VTE)"
+     }
+    ]
+   },
+   {
+    "stewardOrg": {
+     "name": "NINDS"
+    },
+    "elements": [
+     {
+      "elements": [
+       {
+        "name": "Epilepsy",
+        "elements": [
+         {
+          "name": "Classification",
+          "elements": [
+           {
+            "name": "Supplemental",
+            "elements": []
+           }
+          ]
+         },
+         {
+          "name": "Domain",
+          "elements": [
+           {
+            "name": "Safety Data",
+            "elements": [
+             {
+              "name": "Adverse Events",
+              "elements": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "General (For all diseases)",
+        "elements": [
+         {
+          "name": "Classification",
+          "elements": [
+           {
+            "name": "Supplemental",
+            "elements": []
+           }
+          ]
+         },
+         {
+          "name": "Domain",
+          "elements": [
+           {
+            "name": "Safety Data",
+            "elements": [
+             {
+              "name": "Adverse Events",
+              "elements": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "Spinal Cord Injury",
+        "elements": [
+         {
+          "name": "Classification",
+          "elements": [
+           {
+            "name": "Supplemental",
+            "elements": []
+           }
+          ]
+         },
+         {
+          "name": "Domain",
+          "elements": [
+           {
+            "name": "Assessments and Examinations",
+            "elements": [
+             {
+              "name": "Hospital/Care Management",
+              "elements": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "name": "Disease"
+     },
+     {
+      "elements": [
+       {
+        "name": "Assessments and Examinations",
+        "elements": [
+         {
+          "name": "Hospital/Care Management",
+          "elements": []
+         }
+        ]
+       },
+       {
+        "name": "Safety Data",
+        "elements": [
+         {
+          "name": "Adverse Events",
+          "elements": []
+         }
+        ]
+       }
+      ],
+      "name": "Domain"
+     },
+     {
+      "elements": [
+       {
+        "name": "Adult",
+        "elements": []
+       },
+       {
+        "name": "Pediatric",
+        "elements": []
+       }
+      ],
+      "name": "Population"
+     }
+    ]
+   }
+  ],
+  "stewardOrg": {
+   "name": "NINDS"
+  },
+  "registrationState": {
+   "registrationStatus": "Qualified",
+   "administrativeStatus": "Published",
+   "registrationStatusSortOrder": 2
+  },
+  "version": "3.1",
+  "copyrightStatus": "Public domain, free to use",
+  "nihEndorsed": false,
+  "referenceDocuments": [
+   {
+    "source": "NINDS",
+    "document": "Common Terminology Criteria for Adverse Events (CTCAE) v4.0 (http://evs.nci.nih.gov/ftp1/CTCAE/About.html)"
+   }
+  ]
+ },
+ {
+  "tinyId": "myf3RDQJkl",
+  "primaryNameCopy": "Alcoholic Beverage Consumption MoreThan Six At One Occasion Frequency",
+  "designations": [
+   {
+    "sources": [],
+    "tags": [
+     "Long Name"
+    ],
+    "designation": "Alcoholic Beverage Consumption MoreThan Six At One Occasion Frequency"
+   },
+   {
+    "sources": [],
+    "tags": [
+     "Preferred Question Text"
+    ],
+    "designation": "How often do you have six or more drinks on one occasion?"
+   }
+  ],
+  "definitions": [
+   {
+    "sources": [],
+    "definition": "Text to describe the frequency of drinking six or more beverages containing alcohol during one occasion.",
+    "tags": [
+     "Long Name"
+    ]
+   },
+   {
+    "sources": [],
+    "definition": "How often do you have six or",
+    "tags": [
+     "Preferred Question Text"
+    ]
+   }
+  ],
+  "ids": [
+   {
+    "source": "caDSR",
+    "id": "3279230",
+    "version": "1"
+   }
+  ],
+  "valueDomain": {
+   "name": "Calendar Frequency",
+   "identifiers": [],
+   "ids": [],
+   "definition": "A list or register of events; a tabular array of the days._The number of occurrences of something within a given time period. (NCI)",
+   "datatype": "Value List",
+   "permissibleValues": [
+    {
+     "permissibleValue": "2 to 3 times a week",
+     "valueMeaningName": "Two To Three Instance Per Week",
+     "valueMeaningCode": "C66833:C65107:C66834:C48364:C65039:C29844",
+     "valueMeaningDefinition": "A natural number greater than 1 and less than 3 and the quantity that it denotes: the sum of one and one.: Used as a function word to indicate direction, purpose, or movement.: A natural number greater than 2 and less than 4 and the quantity that it denotes: the sum of two and one.: An occurrence of something.: For each, generally denoting a ratio.: Any period of seven consecutive days.",
+     "codeSystemName": "NCI Thesaurus",
+     "conceptId": "C66833:C65107:C66834:C48364:C65039:C29844",
+     "conceptSource": "NCI Thesaurus"
+    },
+    {
+     "permissibleValue": "2 to 4 times a month",
+     "valueMeaningName": "Two To Four Instance Per Month",
+     "valueMeaningCode": "C66833:C65107:C66835:C48364:C65039:C29846",
+     "valueMeaningDefinition": "A natural number greater than 1 and less than 3 and the quantity that it denotes: the sum of one and one.: Used as a function word to indicate direction, purpose, or movement.: A natural number greater than 3 and less than 5 and the quantity that it denotes: the sum of three and one.: An occurrence of something.: For each, generally denoting a ratio.: One of the 12 divisions of a year as determined by a calendar.  It corresponds to the unit of time of approximately to one cycle of the moon's phases, about 30 days or 4 weeks.",
+     "codeSystemName": "NCI Thesaurus",
+     "conceptId": "C66833:C65107:C66835:C48364:C65039:C29846",
+     "conceptSource": "NCI Thesaurus"
+    },
+    {
+     "permissibleValue": "4 or more times a week",
+     "valueMeaningName": "Four Or Greater Than Integer::4 Instance Per Week",
+     "valueMeaningCode": "C66835:C37998:C61584:C45255::4:C48364:C65039:C29844",
+     "valueMeaningDefinition": "A natural number greater than 3 and less than 5 and the quantity that it denotes: the sum of three and one.: An article used to connect words, phrases, or clauses representing alternatives; used to connect alternative terms for the same thing; used in correlation; used to correct or rephrase what was previously said; otherwise.: A statement about the relative size or order of two objects specifying that an object of interest exceeds another object in quantity or measure or value or status.: A number with no fractional part.::4: An occurrence of something.: For each, generally denoting a ratio.: Any period of seven consecutive days.",
+     "codeSystemName": "NCI Thesaurus",
+     "conceptId": "C66835:C37998:C61584:C45255::4:C48364:C65039:C29844",
+     "conceptSource": "NCI Thesaurus"
+    }
+   ],
+   "nbOfPVs": 8
+  },
+  "classification": [
+   {
+    "stewardOrg": {
+     "name": "NIDA"
+    },
+    "elements": [
+     {
+      "name": "Clinical Research",
+      "elements": [
+       {
+        "name": "AUDIT Interview version",
+        "elements": [
+         {
+          "name": "AUDIT",
+          "elements": []
+         }
+        ]
+       },
+       {
+        "elements": [
+         {
+          "elements": [],
+          "name": "AUDIT"
+         }
+        ],
+        "name": "AUDIT Self-Report version"
+       },
+       {
+        "elements": [
+         {
+          "elements": [],
+          "name": "AUDIT-C"
+         }
+        ],
+        "name": "AUDIT-C Questionnaire"
+       }
+      ]
+     },
+     {
+      "name": "Electronic Health Records",
+      "elements": [
+       {
+        "name": "AUDIT-C Questionnaire",
+        "elements": [
+         {
+          "name": "AUDIT-C",
+          "elements": []
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "stewardOrg": {
+   "name": "NCI"
+  },
+  "registrationState": {
+   "registrationStatus": "Qualified",
+   "administrativeStatus": "Published",
+   "registrationStatusSortOrder": 2
+  },
+  "version": "1",
+  "copyrightStatus": "Public domain, free to use",
+  "nihEndorsed": false
+ }
+]

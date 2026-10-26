@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "form_classification",
+  "description": "Where a form is filed — one row per (form_key x steward_org x context x sub_context x population). Same flat shape and wildcard rule as cde_classification. A form is an assembly instrument and is NOT recommendation-tiered, so there is deliberately NO `tier` column here. These scoping columns are what a member's classification is matched against to resolve the member's tier ON the form (wildcards match anything; most-specific member row wins).",
+  "type": "object",
+  "required": ["form_key", "steward_org", "context", "sub_context", "population"],
+  "properties": {
+    "form_key": {
+      "description": "The classified form's key (matches form.form_key; also the CLASSIFIES relationship target). Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "steward_org": {
+      "description": "The classifying authority. Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "context": {
+      "description": "Top scope: disease / study / collection the form is filed under. Part of the identity. '*' = all.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "sub_context": {
+      "description": "Second scope: scenario / severity / phase. Part of the identity. '*' = the whole context.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "population": {
+      "description": "Applicability scope: population. Part of the identity. '*' = all populations.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "domain": {
+      "description": "Descriptive top-level Domain (display column, not identity). Null when absent.",
+      "type": ["string", "null"]
+    }
+  }
+}

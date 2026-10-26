@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "concept",
+  "description": "An ontology term — one external terminology entry (the 'ontology' half of the service), written as a version-stamped snapshot at bind time (reproducibility/FAIR). Linked to CDEs via typed REPRESENTS relationships (role: primary/object_class/property/unit/value_meaning) and to permissible values via embedded concept_curie/iri. NOTE: this is the ATOMIC ontology term, not an ISO-11179 Data Element Concept (DEC = ObjectClass concept + Property concept). A composite `data_element_concept` model is a deferred, additive addition (same tier as reusable value domains); for now DEC is captured via the cde's dec_identifier/dec_name fields plus the REPRESENTS role.",
+  "type": "object",
+  "required": ["concept_key", "curie", "concept_name", "ontology"],
+  "properties": {
+    "concept_key": {
+      "description": "CURIE, used as the dedup key so re-referencing the same term does not duplicate.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "curie": {
+      "description": "prefix:localId, e.g. MONDO:0005148, HP:0001250, SNOMEDCT:73211009, LOINC:2339-0, UCUM:mg.",
+      "type": ["string"]
+    },
+    "iri": {
+      "description": "Resolvable IRI, e.g. http://purl.obolibrary.org/obo/MONDO_0005148.",
+      "type": ["string", "null"]
+    },
+    "concept_name": {
+      "description": "Human-readable term label (the ontology term's primary name, e.g. 'Head Circumference').",
+      "type": ["string"]
+    },
+    "ontology": {
+      "description": "Source ontology/terminology.",
+      "type": ["string"],
+      "examples": ["MONDO", "HPO", "UBERON", "NCIt", "SNOMEDCT", "LOINC", "UMLS", "UCUM", "OMOP"]
+    },
+    "ontology_version": {
+      "description": "Version of the ontology this snapshot was taken from (drift detection).",
+      "type": ["string", "null"]
+    },
+    "definition": {
+      "description": "The term's definition from the source ontology, when available.",
+      "type": ["string", "null"]
+    },
+    "synonyms": {
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "obsolete": { "type": ["boolean", "null"] },
+    "replaced_by": {
+      "description": "Successor CURIE when the term was obsoleted upstream.",
+      "type": ["string", "null"]
+    },
+    "cached_at": {
+      "description": "When this snapshot was resolved from the source.",
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cde_classification",
+  "description": "A CDE's recommendation in a situation — one row per (cde_key x steward_org x context x sub_context x population). The five scoping columns are the identity. A WILDCARD value '*' means 'applies to ALL values of this axis' (leave the cell blank in the source sheet; the importer stores '*'). So a row with sub_context='*' applies to the whole context, and population='*' applies to every population. When a CDE lands on a form, it takes the MOST SPECIFIC matching row — the one with the fewest wildcards that the form still satisfies (a wildcard matches anything; a concrete value must equal the form's). `tier` is the recommendation level; null when the steward has no tier concept. This flat shape replaces the earlier coordinate/facets encoding: everything a curator enters is a plain column.",
+  "type": "object",
+  "required": ["cde_key", "steward_org", "context", "sub_context", "population"],
+  "properties": {
+    "cde_key": {
+      "description": "The classified CDE's key (matches cde.cde_key; also the CLASSIFIES relationship target). Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "steward_org": {
+      "description": "The classifying authority (NINDS, PhenX, NHLBI, PROMIS, ...). May differ from the CDE's own steward. Part of the identity.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "context": {
+      "description": "Top scope: the disease / study / collection this recommendation is for (e.g. 'Traumatic Brain Injury', 'Epilepsy', 'Project 5 (COVID-19)'). Part of the identity. '*' = all contexts (rare).",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "sub_context": {
+      "description": "Second scope: the clinical scenario / severity / phase within the context (e.g. 'Acute Hospitalized', 'Comprehensive', 'Concussion/Mild TBI'). Part of the identity. '*' = applies to the whole context (no scenario distinction).",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "population": {
+      "description": "Applicability scope: the population the recommendation is for (e.g. 'Adult', 'Pediatric'). Part of the identity. '*' = applies to every population.",
+      "type": ["string"],
+      "x-pennsieve-key": true
+    },
+    "domain": {
+      "description": "Descriptive area — the steward's top-level Domain for this CDE (e.g. 'Assessments and Examinations'). NOT part of the identity; a browse/display column. Null when the steward has no Domain axis.",
+      "type": ["string", "null"]
+    },
+    "tier": {
+      "description": "The recommendation level at this scope (NINDS 'Core' / 'Supplemental - Highly Recommended' / 'Supplemental' / 'Exploratory'; NLM 'Tier 1'/'Tier 2'; PTE 'Basic'/'Recommended'). Free string, not a hard enum. Null when the steward has no tier concept.",
+      "type": ["string", "null"]
+    }
+  }
+}
