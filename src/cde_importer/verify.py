@@ -8,12 +8,11 @@ affordable on every run. Verify therefore does three things:
 1. Records: read every model back and compare key sets with the payload(s)
    posted. Missing keys fail the run; keys present in the dataset but absent
    from the run are reported as stale (the source no longer serves them).
-2. SOURCED_FROM: every record must point at the provenance. The provenance
-   record's inbound edges are read in full (one record, paged) and counted by
-   source model, which checks every SOURCED_FROM edge at the cost of a few
-   dozen requests.
-3. The other edge types (CLASSIFIES, PART_OF, REPRESENTS) are checked from
-   both sides on a random sample of records per edge type.
+2. Edges (SOURCED_FROM, CLASSIFIES, PART_OF, REPRESENTS) are checked from both
+   sides on a random sample of source records per edge type.
+3. Optionally (full_edges=True) every SOURCED_FROM edge is counted by paging the
+   provenance record's inbound edges; the service pages ~50 at a time, so this
+   costs about 12 minutes on 75k edges and is off by default.
 """
 import logging
 import random
@@ -97,20 +96,32 @@ class VerifyResult:
         }
 
 
-def read_keys(api2, token, dataset_q, model_ids, models=None):
-    """model -> {key tuple: record id} for every record in the dataset."""
+def read_values(api2, token, dataset_q, model_ids, models=None):
+    """model -> {key tuple: {"id": record id, "value": record value}} for every
+    record in the dataset. Used before a load (to skip unchanged records) and by
+    verify (to check what was posted is there)."""
     out = {}
     for m in models or client.POST_ORDER:
         if m not in model_ids:
             continue
-        out[m] = {key_of(m, r.get("value")): r["id"] for r in client.search_records(api2, token, dataset_q, model_ids[m])}
+        out[m] = {key_of(m, r.get("value")): {"id": r["id"], "value": r.get("value") or {}}
+                  for r in client.search_records(api2, token, dataset_q, model_ids[m])}
         log.info("read back %s: %d records", m, len(out[m]))
     return out
 
 
-def verify(api2, token, dataset_q, model_ids, expected, sample=25, seed=None):
+def read_keys(api2, token, dataset_q, model_ids, models=None):
+    """model -> {key tuple: record id} for every record in the dataset."""
+    return {m: {k: v["id"] for k, v in recs.items()}
+            for m, recs in read_values(api2, token, dataset_q, model_ids, models).items()}
+
+
+def verify(api2, token, dataset_q, model_ids, expected, sample=25, seed=None, full_edges=False):
     """Compare the dataset with what the run posted. Returns a VerifyResult;
-    result.ok is False when any posted record or edge is missing."""
+    result.ok is False when any posted record or edge is missing. With
+    full_edges=True every SOURCED_FROM edge is counted by paging the provenance
+    record's inbound edges (slow: ~50 edges per request); by default SOURCED_FROM
+    is sampled like the other edge types."""
     res = VerifyResult()
     by_id = {v: k for k, v in model_ids.items()}
     have = read_keys(api2, token, dataset_q, model_ids, [m for m in client.POST_ORDER if expected.keys.get(m)])
@@ -131,7 +142,7 @@ def verify(api2, token, dataset_q, model_ids, expected, sample=25, seed=None):
     for _label, src, tgt, key in client.RELATIONSHIPS:
         if tgt == PROVENANCE and expected.edges.get(key):
             exp_sf[src] = len(expected.edges[key])
-    if exp_sf and prov:
+    if exp_sf and prov and full_edges:
         found = {}
         for prov_id in prov.values():
             for direction, rtype, rec in client.record_relationships(api2, token, dataset_q, prov_id):
@@ -143,11 +154,12 @@ def verify(api2, token, dataset_q, model_ids, expected, sample=25, seed=None):
             if found.get(src, 0) < n:
                 res.problems.append(f"SOURCED_FROM {src}->provenance: expected {n}, found {found.get(src, 0)}")
 
-    # other edge types: sample source records, read their edges, check the targets
+    # edge types: sample source records, read their edges, check the targets
+    # (SOURCED_FROM too, unless it was counted in full above)
     rng = random.Random(seed)
     for label, src, tgt, key in client.RELATIONSHIPS:
         pairs = expected.edges.get(key)
-        if tgt == PROVENANCE or not pairs or sample <= 0:
+        if (tgt == PROVENANCE and full_edges) or not pairs or sample <= 0:
             continue
         by_source = {}
         for s, t in pairs:

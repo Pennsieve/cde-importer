@@ -286,6 +286,53 @@ def merge_payloads(payloads):
     return merged
 
 
+def same_value(posted, stored):
+    """True when a posted record equals the stored one: nulls dropped, JSON
+    round-tripped (so 1 == 1.0, tuples == lists), keys compared in any order."""
+    def norm(v):
+        return json.loads(json.dumps({k: x for k, x in (v or {}).items() if x is not None}, sort_keys=True))
+    return norm(posted) == norm(stored)
+
+
+def plan_changes(payload, stored):
+    """Split a merged payload into what must be posted, given the dataset's current
+    records (`stored`: model -> {key tuple: {"value": ...}}, from verify.read_values).
+    A record is posted when it is new or its value changed. An edge is posted when
+    either endpoint is posted, because a re-posted record drops the edges it had.
+    Returns (payload_to_post, stats) with stats[model] = {new, changed, unchanged}."""
+    from .client import KEY, RELATIONSHIPS
+    out = empty_payload()
+    post_keys = {m: set() for m in MODELS}
+    stats = {}
+    for m in MODELS:
+        have = stored.get(m) or {}
+        new = changed = unchanged = 0
+        for r in payload.get(m) or []:
+            k = tuple(r.get(f) for f in KEY[m])
+            if k not in have:
+                new += 1
+            elif not same_value(r, have[k].get("value")):
+                changed += 1
+            else:
+                unchanged += 1
+                continue
+            out[m].append(r)
+            post_keys[m].add(k)
+        if new or changed or unchanged:
+            stats[m] = {"new": new, "changed": changed, "unchanged": unchanged}
+
+    def pk(model, val):
+        return tuple(val.get(f) for f in KEY[model]) if isinstance(val, dict) else (val,)
+
+    rels = payload.get("_rels") or {}
+    for _label, src, tgt, key in RELATIONSHIPS:
+        kept = [(s, t) for s, t in rels.get(key) or []
+                if pk(src, s) in post_keys[src] or pk(tgt, t) in post_keys[tgt]]
+        if kept:
+            out["_rels"][key] = kept
+    return out, stats
+
+
 def empty_payload():
     """A payload with no records, for partial passes (e.g. forms only)."""
     return {m: [] for m in MODELS} | {"_rels": {}}

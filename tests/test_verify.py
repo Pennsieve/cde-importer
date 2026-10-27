@@ -67,10 +67,10 @@ class _Dataset:
         yield from self.edges.get(rid, [])
 
 
-def _run(ds, expected, sample=25):
+def _run(ds, expected, sample=25, full_edges=True):
     with mock.patch.object(V.client, "search_records", side_effect=ds.search), \
             mock.patch.object(V.client, "record_relationships", side_effect=ds.rels):
-        return V.verify("api2", "t", "ds", MIDS, expected, sample=sample, seed=1)
+        return V.verify("api2", "t", "ds", MIDS, expected, sample=sample, seed=1, full_edges=full_edges)
 
 
 class VerifyTest(unittest.TestCase):
@@ -114,6 +114,23 @@ class VerifyTest(unittest.TestCase):
         res = _run(_Dataset(p, drop_edges={("PART_OF_form", ("c2",))}), V.Expected().add(p))
         self.assertFalse(res.ok)
         self.assertEqual(res.sampled["PART_OF_form"]["missing"], [(("c2",), ("f1",))])
+
+    def test_default_samples_sourced_from_instead_of_counting(self):
+        p = _payload()
+        res = _run(_Dataset(p, drop_edges={("SOURCED_FROM_cde", ("c2",))}), V.Expected().add(p), full_edges=False)
+        self.assertEqual(res.sourced_from, {})
+        self.assertIn("SOURCED_FROM_cde", res.sampled)
+        self.assertFalse(res.ok)
+        self.assertEqual(res.sampled["SOURCED_FROM_cde"]["missing"], [(("c2",), ("nlm",))])
+
+    def test_read_values_keeps_ids_and_values(self):
+        p = _payload()
+        ds = _Dataset(p)
+        with mock.patch.object(V.client, "search_records", side_effect=ds.search):
+            vals = V.read_values("api2", "t", "ds", MIDS, ["cde"])
+        self.assertEqual(set(vals), {"cde"})
+        self.assertEqual(vals["cde"][("c1",)]["value"], {"cde_key": "c1"})
+        self.assertTrue(vals["cde"][("c1",)]["id"])
 
     def test_sample_zero_skips_edge_sampling(self):
         p = _payload()

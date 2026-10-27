@@ -185,3 +185,48 @@ class MergePayloadsTest(unittest.TestCase):
     def test_merge_empty(self):
         m = T.merge_payloads([])
         self.assertEqual(T.summarize(m)["relationships"], 0)
+
+
+class PlanChangesTest(unittest.TestCase):
+    def setUp(self):
+        self.cls = {"cde_key": "c1", "steward_org": "NINDS", "context": "X", "sub_context": "*", "population": "*"}
+        self.payload = {
+            "provenance": [{"source_key": "nlm", "retrieved_at": "2026-10-27T10:00:00Z"}],
+            "cde": [{"cde_key": "c1", "cde_name": "A", "aliases": None}, {"cde_key": "c2", "cde_name": "B"},
+                    {"cde_key": "c3", "cde_name": "new"}],
+            "cde_classification": [self.cls],
+            "_rels": {"SOURCED_FROM_cde": [("c1", "nlm"), ("c2", "nlm"), ("c3", "nlm")],
+                      "CLASSIFIES_cde": [(self.cls, "c1")],
+                      "PART_OF_form": [("c2", "f1")]},
+        }
+        self.stored = {
+            "provenance": {("nlm",): {"id": "p", "value": {"source_key": "nlm", "retrieved_at": "2026-10-20T10:00:00Z"}}},
+            "cde": {("c1",): {"id": "1", "value": {"cde_key": "c1", "cde_name": "A"}},
+                    ("c2",): {"id": "2", "value": {"cde_key": "c2", "cde_name": "old B"}}},
+            "cde_classification": {("c1", "NINDS", "X", "*", "*"): {"id": "k", "value": dict(self.cls)}},
+        }
+
+    def test_same_value_ignores_nulls_and_order(self):
+        self.assertTrue(T.same_value({"a": 1, "b": None, "c": [1, 2]}, {"c": [1, 2], "a": 1.0}))
+        self.assertFalse(T.same_value({"a": 1}, {"a": 2}))
+
+    def test_posts_only_new_and_changed_records(self):
+        out, stats = T.plan_changes(self.payload, self.stored)
+        self.assertEqual([r["cde_key"] for r in out["cde"]], ["c2", "c3"])
+        self.assertEqual(stats["cde"], {"new": 1, "changed": 1, "unchanged": 1})
+        self.assertEqual(stats["provenance"], {"new": 0, "changed": 1, "unchanged": 0})
+        self.assertEqual(out["cde_classification"], [])
+        self.assertEqual(stats["cde_classification"], {"new": 0, "changed": 0, "unchanged": 1})
+
+    def test_edges_follow_posted_endpoints(self):
+        out, _ = T.plan_changes(self.payload, self.stored)
+        # provenance changed -> every SOURCED_FROM edge; c1 unchanged and its row unchanged -> no CLASSIFIES
+        self.assertEqual(sorted(out["_rels"]["SOURCED_FROM_cde"]), [("c1", "nlm"), ("c2", "nlm"), ("c3", "nlm")])
+        self.assertNotIn("CLASSIFIES_cde", out["_rels"])
+        self.assertEqual(out["_rels"]["PART_OF_form"], [("c2", "f1")])
+
+    def test_empty_dataset_posts_everything(self):
+        out, stats = T.plan_changes(self.payload, {})
+        self.assertEqual(len(out["cde"]), 3)
+        self.assertEqual(stats["cde"], {"new": 3, "changed": 0, "unchanged": 0})
+        self.assertEqual(len(out["_rels"]["CLASSIFIES_cde"]), 1)
