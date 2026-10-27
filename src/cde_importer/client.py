@@ -91,20 +91,62 @@ def get_token(api, env=os.environ):
     return res["AuthenticationResult"]["AccessToken"]
 
 
+# Cognito access tokens live one hour; refresh before that so a long run
+# (a full re-sync re-versions tens of thousands of records) never crosses it.
+TOKEN_MAX_AGE = 50 * 60
+AUTH_CODES = {401, 403}
+
+
+class Auth:
+    """A token that renews itself: proactively after TOKEN_MAX_AGE, and on demand
+    when a request is refused with 401/403. Pass an Auth wherever a token is
+    accepted; api2_headers reads its current value."""
+
+    def __init__(self, api, env=os.environ, max_age=TOKEN_MAX_AGE, clock=time.time):
+        self.api, self.env, self.max_age, self.clock = api, env, max_age, clock
+        self._token, self._issued = None, 0.0
+
+    @property
+    def token(self):
+        if self._token is None or self.clock() - self._issued > self.max_age:
+            self.refresh()
+        return self._token
+
+    def refresh(self):
+        self._token = get_token(self.api, self.env)
+        self._issued = self.clock()
+        log.info("token %s", "renewed" if self._issued else "obtained")
+        return self._token
+
+    def __str__(self):
+        return self.token
+
+
+def _refresher(token):
+    return getattr(token, "refresh", None)
+
+
 def api2_headers(token):
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json",
             "Accept": "application/json", "Origin": ORIGIN}
 
 
-def urlopen_retry(make_req, label, sleep=time.sleep, attempts=MAX_ATTEMPTS):
+def urlopen_retry(make_req, label, sleep=time.sleep, attempts=MAX_ATTEMPTS, on_auth_error=None):
     """urlopen with a request timeout and exponential backoff on transient gateway
-    statuses and network stalls. Returns the response body text."""
+    statuses and network stalls. On 401/403, on_auth_error() (a token refresh) is
+    called once before the next attempt. Returns the response body text."""
+    refreshed = False
     for attempt in range(1, attempts + 1):
         try:
             with urllib.request.urlopen(make_req(), timeout=TIMEOUT) as r:
                 return r.read().decode()
         except urllib.error.HTTPError as e:
             msg = e.read().decode()
+            if e.code in AUTH_CODES and on_auth_error and not refreshed and attempt < attempts:
+                log.warning("retry %d after %d with a renewed token: %s", attempt, e.code, label)
+                on_auth_error()
+                refreshed = True
+                continue
             if e.code in RETRY_CODES and attempt < attempts:
                 wait = min(2 ** attempt, 60)
                 log.warning("retry %d after %d (wait %ss): %s", attempt, e.code, wait, label)
@@ -122,7 +164,7 @@ def urlopen_retry(make_req, label, sleep=time.sleep, attempts=MAX_ATTEMPTS):
 
 def get_json(url, token, label=None):
     raw = urlopen_retry(lambda: urllib.request.Request(url, headers=api2_headers(token)),
-                        label or "GET " + url.split("?")[0])
+                        label or "GET " + url.split("?")[0], on_auth_error=_refresher(token))
     return json.loads(raw) if raw else {}
 
 
@@ -130,7 +172,7 @@ def post(url, token, payload, pace=None):
     data = json.dumps(payload).encode()
     body = urlopen_retry(
         lambda: urllib.request.Request(url, data=data, headers=api2_headers(token), method="POST"),
-        "POST " + url.split("?")[0])
+        "POST " + url.split("?")[0], on_auth_error=_refresher(token))
     time.sleep(PACE if pace is None else pace)
     return body
 
@@ -162,7 +204,7 @@ def search_records(api2, token, dataset_q, model_id, page_size=500):
         if cursor:
             url += "&cursor=" + urllib.parse.quote(cursor, safe="")
         raw = urlopen_retry(lambda: urllib.request.Request(url, data=b"{}", headers=api2_headers(token), method="POST"),
-                            "POST records/search")
+                            "POST records/search", on_auth_error=_refresher(token))
         page = json.loads(raw) if raw else {}
         recs = page.get("records") or []
         yield from recs
