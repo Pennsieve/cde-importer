@@ -154,6 +154,45 @@ def resolve_models(api2, token, dataset_q):
     return out
 
 
+def search_records(api2, token, dataset_q, model_id, page_size=500):
+    """Yield every record of a model: {id, model_version, value, ...}."""
+    cursor = None
+    while True:
+        url = f"{api2}/metadata/models/{model_id}/records/search?dataset_id={dataset_q}&page_size={page_size}"
+        if cursor:
+            url += "&cursor=" + urllib.parse.quote(cursor, safe="")
+        raw = urlopen_retry(lambda: urllib.request.Request(url, data=b"{}", headers=api2_headers(token), method="POST"),
+                            "POST records/search")
+        page = json.loads(raw) if raw else {}
+        recs = page.get("records") or []
+        yield from recs
+        cursor = page.get("cursor")
+        if not cursor or not recs:
+            return
+
+
+def record_relationships(api2, token, dataset_q, record_id, page_size=1000):
+    """Yield (direction, relationship_type, record) for every edge of a record,
+    direction being "inbound" or "outbound" and record the other end."""
+    cursor = None
+    while True:
+        url = f"{api2}/metadata/records/{record_id}/relationships?dataset_id={dataset_q}&page_size={page_size}"
+        if cursor:
+            url += "&cursor=" + urllib.parse.quote(cursor, safe="")
+        page = get_json(url, token, "GET record relationships")
+        rels = page.get("relationships") or {}
+        n = 0
+        for direction in ("inbound", "outbound"):
+            for item in rels.get(direction) or []:
+                n += 1
+                if item.get("deleted_at"):
+                    continue
+                yield direction, item.get("relationship_type"), item.get("record") or {}
+        cursor = page.get("cursor") or page.get("next_cursor")
+        if not cursor or n == 0:
+            return
+
+
 def connect(api2, token, dataset_node):
     """-> (url-quoted dataset id, {model name: model id})."""
     dataset_q = urllib.parse.quote(dataset_node, safe="")
