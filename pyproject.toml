@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cde-importer"
-version = "0.1.0"
+version = "0.1.1"
 description = "Shared transform, model and metadata-service client logic for the Pennsieve CDE catalog sync applications."
 readme = "README.md"
 license = "Apache-2.0"

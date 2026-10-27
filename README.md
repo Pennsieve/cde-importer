@@ -12,7 +12,7 @@ reader and calls into this package.
 Pin a tag in the application's `requirements.txt`:
 
 ```
-cde-importer @ git+https://github.com/Pennsieve/cde-importer@v0.1.0
+cde-importer @ git+https://github.com/Pennsieve/cde-importer@v0.1.1
 ```
 
 Python 3.13, no runtime dependencies.

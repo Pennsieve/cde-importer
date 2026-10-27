@@ -42,15 +42,31 @@ class SchemasTest(unittest.TestCase):
         self.assertTrue(M.schema_differs({"a": [1, 2], "b": 2}, a))
         self.assertTrue(M.schema_differs(None, a))
 
+    def test_structural_ignores_descriptions_only(self):
+        local = M.load_schema("cde")
+        reworded = json.loads(json.dumps(local))
+        reworded["description"] = "old top-level text"
+        reworded["properties"]["cde_source"]["description"] = "old wording"
+        self.assertTrue(M.schema_differs(reworded, local))
+        self.assertFalse(M.schema_differs(reworded, local, structural=True))
+        retyped = json.loads(json.dumps(local))
+        retyped["properties"]["cde_source"]["type"] = "integer"
+        self.assertTrue(M.schema_differs(retyped, local, structural=True))
+        dropped = json.loads(json.dumps(local))
+        del dropped["properties"]["cde_source"]
+        self.assertTrue(M.schema_differs(dropped, local, structural=True))
 
-def _dataset_listing(models, drift=None, missing=()):
+
+def _dataset_listing(models, drift=None, missing=(), reworded=None):
     out = []
     for m in models:
         if m["name"] in missing:
             continue
-        schema = dict(m["schema"])
+        schema = json.loads(json.dumps(m["schema"]))
         if m["name"] == drift:
-            schema["description"] = "drifted"
+            schema["properties"]["__extra"] = {"type": "string"}
+        if m["name"] == reworded:
+            schema["properties"]["cde_source"]["description"] = "old wording"
         out.append({"model": {"name": m["name"], "id": f"id-{m['name']}",
                               "latest_version": {"version": 1, "schema": schema}}})
     return out
@@ -71,6 +87,11 @@ class CheckModelsTest(unittest.TestCase):
             with self.assertRaises(M.ModelDriftError) as cm:
                 M.check_models("api2", "t", "N:dataset:x")
         self.assertEqual(cm.exception.drift, ["cde"])
+
+    def test_reworded_description_is_not_drift(self):
+        with mock.patch.object(M.client, "get_json", return_value=_dataset_listing(self.models, reworded="cde")):
+            ids = M.check_models("api2", "t", "N:dataset:x")
+        self.assertEqual(len(ids), 8)
 
     def test_missing_model_raises(self):
         with mock.patch.object(M.client, "get_json",

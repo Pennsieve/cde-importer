@@ -66,8 +66,19 @@ def load_models(models_dir=None):
     return out
 
 
-def schema_differs(stored, local):
-    """Order-independent JSON comparison of a stored schema vs a local one."""
+def _strip_descriptions(node):
+    """The schema without its description texts, at every level."""
+    if isinstance(node, dict):
+        return {k: _strip_descriptions(v) for k, v in node.items() if k != "description"}
+    if isinstance(node, list):
+        return [_strip_descriptions(v) for v in node]
+    return node
+
+
+def schema_differs(stored, local, structural=False):
+    """Order-independent JSON comparison of a stored schema vs a local one. With
+    structural=True, description texts are ignored: a reworded description is
+    documentation, not a model change, and must not block a sync."""
     def norm(s):
         if s is None:
             return None
@@ -76,6 +87,8 @@ def schema_differs(stored, local):
                 s = json.loads(s)
             except ValueError:
                 return s
+        if structural:
+            s = _strip_descriptions(s)
         return json.dumps(s, sort_keys=True)
     return norm(stored) != norm(local)
 
@@ -177,7 +190,8 @@ def instantiate_models(api2, token, dataset_node, template_ids, models, sync=Fal
 
 def check_models(api2, token, dataset_node, models=None):
     """Fail fast when the dataset is missing a model or a model's latest schema
-    differs from the vendored one. Returns name -> model id on success."""
+    differs structurally from the vendored one (properties, types, keys, required;
+    description texts are ignored). Returns name -> model id on success."""
     models = models or load_models()
     have = dataset_models(api2, token, dataset_node)
     drift = []
@@ -187,7 +201,7 @@ def check_models(api2, token, dataset_node, models=None):
             drift.append(f"{name} (missing)")
             continue
         current = have[name]["schema"] or model_schema(api2, token, dataset_node, have[name]["id"])
-        if schema_differs(current, m["schema"]):
+        if schema_differs(current, m["schema"], structural=True):
             drift.append(name)
     if drift:
         raise ModelDriftError(drift)
