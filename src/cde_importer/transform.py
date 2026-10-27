@@ -266,6 +266,26 @@ def build_payload(cde_inputs, cde_cls, forms, form_cls, bundles, bundle_cls,
             "bundle_classification": bundle_cls, "form_classification": form_cls, "_rels": rels}
 
 
+def merge_payloads(payloads):
+    """Merge several payloads into one: records deduplicated by key (last writer
+    wins), relationship pairs deduplicated. Posting one merged payload means every
+    record is created once and every edge after all records, which matters because
+    re-posting a record drops the edges already attached to it."""
+    from .client import KEY, dedupe_pairs
+    merged = empty_payload()
+    seen = {m: {} for m in MODELS}
+    for p in payloads:
+        for m in MODELS:
+            for r in p.get(m) or []:
+                seen[m][tuple(r.get(f) for f in KEY[m])] = r
+        for k, pairs in (p.get("_rels") or {}).items():
+            merged["_rels"].setdefault(k, []).extend(pairs)
+    for m in MODELS:
+        merged[m] = list(seen[m].values())
+    merged["_rels"] = {k: dedupe_pairs(v) for k, v in merged["_rels"].items()}
+    return merged
+
+
 def empty_payload():
     """A payload with no records, for partial passes (e.g. forms only)."""
     return {m: [] for m in MODELS} | {"_rels": {}}

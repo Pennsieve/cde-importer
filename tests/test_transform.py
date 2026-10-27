@@ -161,3 +161,27 @@ class BuildPayloadTest(unittest.TestCase):
         e = T.empty_payload()
         self.assertEqual(T.summarize(e)["relationships"], 0)
         self.assertEqual(sorted(e), sorted(list(T.MODELS) + ["_rels"]))
+
+
+class MergePayloadsTest(unittest.TestCase):
+    def test_records_once_edges_once_last_writer_wins(self):
+        a = {"provenance": [{"source_key": "nlm"}], "cde": [{"cde_key": "c1", "cde_name": "A"}, {"cde_key": "c2"}],
+             "_rels": {"SOURCED_FROM_cde": [("c1", "nlm"), ("c2", "nlm")],
+                       "CLASSIFIES_cde": [({"cde_key": "c1", "steward_org": "NINDS", "context": "X",
+                                            "sub_context": "*", "population": "*"}, "c1")]}}
+        b = {"cde": [{"cde_key": "c1", "cde_name": "B"}, {"cde_key": "c3"}],
+             "_rels": {"SOURCED_FROM_cde": [("c1", "nlm"), ("c3", "nlm")],
+                       "CLASSIFIES_cde": [({"cde_key": "c1", "steward_org": "NHLBI", "context": "Y",
+                                            "sub_context": "*", "population": "*"}, "c1")]}}
+        m = T.merge_payloads([a, b])
+        self.assertEqual([r["cde_key"] for r in m["cde"]], ["c1", "c2", "c3"])
+        self.assertEqual(next(r for r in m["cde"] if r["cde_key"] == "c1")["cde_name"], "B")
+        self.assertEqual(len(m["provenance"]), 1)
+        self.assertEqual(sorted(m["_rels"]["SOURCED_FROM_cde"]), [("c1", "nlm"), ("c2", "nlm"), ("c3", "nlm")])
+        self.assertEqual(len(m["_rels"]["CLASSIFIES_cde"]), 2)
+        self.assertEqual(m["form"], [])
+        self.assertEqual(T.summarize(m)["relationships"], 5)
+
+    def test_merge_empty(self):
+        m = T.merge_payloads([])
+        self.assertEqual(T.summarize(m)["relationships"], 0)
