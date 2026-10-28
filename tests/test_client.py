@@ -67,6 +67,19 @@ class RetryTest(unittest.TestCase):
             with self.assertRaises(CL.ApiError):
                 CL.urlopen_retry(lambda: "req", "x", sleep=lambda s: None, attempts=3)
 
+    def test_remote_disconnect_retried(self):
+        import http.client
+        calls = iter([http.client.RemoteDisconnected("closed"), ConnectionResetError(), _Resp("ok")])
+
+        def fake_urlopen(req, timeout=None):
+            r = next(calls)
+            if isinstance(r, Exception):
+                raise r
+            return r
+
+        with mock.patch.object(CL.urllib.request, "urlopen", side_effect=fake_urlopen):
+            self.assertEqual(CL.urlopen_retry(lambda: "req", "x", sleep=lambda s: None), "ok")
+
     def test_network_error_retried(self):
         calls = iter([urllib.error.URLError("stall"), _Resp("ok")])
 

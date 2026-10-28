@@ -5,6 +5,7 @@ payload (records + relationships) into a dataset in dependency order.
 Auth: PENNSIEVE_SESSION_TOKEN, else PENNSIEVE_API_KEY + PENNSIEVE_API_SECRET
 exchanged for a Cognito access token. All api2 calls carry the Origin header.
 """
+import http.client
 import json
 import logging
 import os
@@ -153,10 +154,13 @@ def urlopen_retry(make_req, label, sleep=time.sleep, attempts=MAX_ATTEMPTS, on_a
                 sleep(wait)
                 continue
             raise ApiError(label, e.code, msg) from e
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException, ConnectionError) as e:
+            # URLError wraps most socket failures, but a connection the server closes
+            # mid-request surfaces as http.client.RemoteDisconnected (an HTTPException
+            # and a ConnectionResetError), so catch that family too.
             if attempt < attempts:
                 wait = min(2 ** attempt, 60)
-                log.warning("retry %d after network error (wait %ss): %s: %s", attempt, wait, label, e)
+                log.warning("retry %d after network error (wait %ss): %s: %s", attempt, wait, label, type(e).__name__)
                 sleep(wait)
                 continue
             raise

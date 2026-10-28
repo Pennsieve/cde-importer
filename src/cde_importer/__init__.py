@@ -1,5 +1,5 @@
 """Shared logic for the Pennsieve CDE catalog sync applications."""
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from . import client, coordinate, models, report, transform, verify  # noqa: E402
 
