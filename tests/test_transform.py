@@ -218,8 +218,14 @@ class PlanChangesTest(unittest.TestCase):
         self.assertEqual(out["cde_classification"], [])
         self.assertEqual(stats["cde_classification"], {"new": 0, "changed": 0, "unchanged": 1})
 
-    def test_edges_follow_posted_endpoints(self):
+    def test_all_edges_posted_by_default(self):
         out, _ = T.plan_changes(self.payload, self.stored)
+        self.assertEqual(sorted(out["_rels"]["SOURCED_FROM_cde"]), [("c1", "nlm"), ("c2", "nlm"), ("c3", "nlm")])
+        self.assertEqual(len(out["_rels"]["CLASSIFIES_cde"]), 1)
+        self.assertEqual(out["_rels"]["PART_OF_form"], [("c2", "f1")])
+
+    def test_edges_follow_posted_endpoints_when_asked(self):
+        out, _ = T.plan_changes(self.payload, self.stored, all_edges=False)
         # provenance changed -> every SOURCED_FROM edge; c1 unchanged and its row unchanged -> no CLASSIFIES
         self.assertEqual(sorted(out["_rels"]["SOURCED_FROM_cde"]), [("c1", "nlm"), ("c2", "nlm"), ("c3", "nlm")])
         self.assertNotIn("CLASSIFIES_cde", out["_rels"])

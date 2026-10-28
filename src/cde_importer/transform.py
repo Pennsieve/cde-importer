@@ -294,11 +294,15 @@ def same_value(posted, stored):
     return norm(posted) == norm(stored)
 
 
-def plan_changes(payload, stored):
+def plan_changes(payload, stored, all_edges=True):
     """Split a merged payload into what must be posted, given the dataset's current
     records (`stored`: model -> {key tuple: {"value": ...}}, from verify.read_values).
-    A record is posted when it is new or its value changed. An edge is posted when
-    either endpoint is posted, because a re-posted record drops the edges it had.
+    A record is posted when it is new or its value changed. Edges are all posted
+    (all_edges=True, the default): posting an existing edge is a no-op, edges are
+    cheap next to records, and only re-posting them all makes a run that follows
+    an interrupted one complete (a record created by a run that died before its
+    edges went in is "unchanged" to the next run). all_edges=False keeps only the
+    edges touching a posted record, which suffices after a completed run.
     Returns (payload_to_post, stats) with stats[model] = {new, changed, unchanged}."""
     from .client import KEY, RELATIONSHIPS
     out = empty_payload()
@@ -326,8 +330,9 @@ def plan_changes(payload, stored):
 
     rels = payload.get("_rels") or {}
     for _label, src, tgt, key in RELATIONSHIPS:
-        kept = [(s, t) for s, t in rels.get(key) or []
-                if pk(src, s) in post_keys[src] or pk(tgt, t) in post_keys[tgt]]
+        pairs = rels.get(key) or []
+        kept = list(pairs) if all_edges else [(s, t) for s, t in pairs
+                                              if pk(src, s) in post_keys[src] or pk(tgt, t) in post_keys[tgt]]
         if kept:
             out["_rels"][key] = kept
     return out, stats
