@@ -163,3 +163,44 @@ class PostDataTest(unittest.TestCase):
     def test_empty_models_skipped(self):
         CL.post_data("api2", "t", "ds", self.mid, {"cde": [], "_rels": {}}, post_fn=self.post)
         self.assertEqual(self.calls, [])
+
+
+class AuthTest(unittest.TestCase):
+    def test_renews_after_max_age_and_on_demand(self):
+        now = [1000.0]
+        with mock.patch.object(CL, "get_token", side_effect=["t1", "t2", "t3"]) as gt:
+            a = CL.Auth("api", env={}, max_age=100, clock=lambda: now[0])
+            self.assertEqual(a.token, "t1")
+            self.assertEqual(a.token, "t1")
+            now[0] += 101
+            self.assertEqual(a.token, "t2")
+            a.refresh()
+            self.assertEqual(a.token, "t3")
+            self.assertEqual(str(a), "t3")
+        self.assertEqual(gt.call_count, 3)
+
+    def test_headers_use_current_token(self):
+        with mock.patch.object(CL, "get_token", return_value="tok"):
+            self.assertEqual(CL.api2_headers(CL.Auth("api", env={}))["Authorization"], "Bearer tok")
+
+    def test_auth_error_refreshes_once_then_retries(self):
+        calls = iter([_http_error(403), _Resp("ok")])
+        refreshed = []
+
+        def fake_urlopen(req, timeout=None):
+            r = next(calls)
+            if isinstance(r, Exception):
+                raise r
+            return r
+
+        with mock.patch.object(CL.urllib.request, "urlopen", side_effect=fake_urlopen):
+            body = CL.urlopen_retry(lambda: "req", "x", sleep=lambda s: None, on_auth_error=lambda: refreshed.append(1))
+        self.assertEqual(body, "ok")
+        self.assertEqual(refreshed, [1])
+
+    def test_persistent_403_after_refresh_falls_back_to_backoff(self):
+        sleeps = []
+        with mock.patch.object(CL.urllib.request, "urlopen", side_effect=_http_error(403)):
+            with self.assertRaises(CL.ApiError):
+                CL.urlopen_retry(lambda: "req", "x", sleep=sleeps.append, attempts=4, on_auth_error=lambda: None)
+        self.assertEqual(sleeps, [4, 8])
